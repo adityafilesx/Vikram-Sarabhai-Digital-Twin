@@ -4,7 +4,7 @@ from loguru import logger
 from langgraph.graph import StateGraph, START, END
 from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
-from utils.api_rotator import rotator, with_retry
+from utils.api_rotator import rotator, with_retry, with_model_fallback
 
 from agent.state import AgentState
 from agent.intent_classifier import IntentClassifier
@@ -37,7 +37,8 @@ class SarabhaiAgent:
         return ChatGoogleGenerativeAI(
             model=self.model_name,
             api_key=rotator.get_current_key() or "",
-            temperature=0.3
+            temperature=0.3,
+            max_retries=0
         )
         
     def _build_graph(self):
@@ -50,14 +51,13 @@ class SarabhaiAgent:
         workflow.add_node("memory_update_node", self.memory_update_node)
         workflow.add_node("response_node", self.response_node)
         
-        # Sequential routing: intent → rag → memory → timeline → reasoning → memory_update → response
+        # Sequential routing: intent → rag → memory → timeline → reasoning → response
         workflow.add_edge(START, "intent_node")
         workflow.add_edge("intent_node", "rag_node")
         workflow.add_edge("rag_node", "memory_node")
         workflow.add_edge("memory_node", "timeline_node")
         workflow.add_edge("timeline_node", "reasoning_node")
-        workflow.add_edge("reasoning_node", "memory_update_node")
-        workflow.add_edge("memory_update_node", "response_node")
+        workflow.add_edge("reasoning_node", "response_node")
         workflow.add_edge("response_node", END)
         
         return workflow.compile()
@@ -155,38 +155,43 @@ class SarabhaiAgent:
             mode=state.get('mode', 'conversational')
         )
         
-        # Execute based on mode
         mode = state.get('mode', 'conversational')
         
-        try:
+        def _build_and_call(model_name: str):
+            """Build an LLM with the given model name and execute."""
+            llm = ChatGoogleGenerativeAI(
+                model=model_name,
+                api_key=rotator.get_current_key() or "",
+                temperature=0.3,
+                max_retries=0
+            )
             if mode == 'mission_planning':
-                result = with_retry(
-                    self._get_llm,
-                    lambda llm: llm.with_structured_output(MissionPlan).invoke(f"{system_prompt}\n\nUser Objective: {last_msg}")
-                )
+                return llm.with_structured_output(MissionPlan).invoke(f"{system_prompt}\n\nUser Objective: {last_msg}")
+            elif mode == 'research_mentor':
+                return llm.with_structured_output(ResearchFeedback).invoke(f"{system_prompt}\n\nResearch Idea: {last_msg}")
+            else:
+                messages = [{"role": "system", "content": system_prompt}] + state['messages']
+                return llm.invoke(messages)
+        
+        try:
+            result = with_model_fallback(self.model_name, _build_and_call)
+            
+            if mode == 'mission_planning':
                 planner = MissionPlanner()
                 response = planner.format_for_gradio(result)
                 return {"final_response": response, "structured_output": result.model_dump(), "node_trace": ["reasoning_node"]}
-                
             elif mode == 'research_mentor':
-                result = with_retry(
-                    self._get_llm,
-                    lambda llm: llm.with_structured_output(ResearchFeedback).invoke(f"{system_prompt}\n\nResearch Idea: {last_msg}")
-                )
                 mentor = ResearchMentor()
                 response = mentor.format_for_gradio(result)
                 return {"final_response": response, "structured_output": result.model_dump(), "node_trace": ["reasoning_node"]}
-                
-            else: # conversational
-                messages = [{"role": "system", "content": system_prompt}] + state['messages']
-                result = with_retry(
-                    self._get_llm,
-                    lambda llm: llm.invoke(messages)
-                )
+            else:
                 return {"final_response": result.content, "structured_output": None, "node_trace": ["reasoning_node"]}
                 
         except Exception as e:
+            error_str = str(e).upper()
             logger.error(f"Reasoning node failed: {e}")
+            if "RESOURCE_EXHAUSTED" in error_str or "429" in error_str or "503" in error_str or "UNAVAILABLE" in error_str:
+                return {"final_response": "I'm currently experiencing high demand across all my API resources. Please wait 1-2 minutes and try again — I will be able to respond shortly.", "error": str(e), "node_trace": ["reasoning_node"]}
             return {"final_response": "I apologize, but I encountered an error while formulating my thoughts. Please try your question again.", "error": str(e), "node_trace": ["reasoning_node"]}
 
     def memory_update_node(self, state: AgentState):

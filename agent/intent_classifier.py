@@ -1,10 +1,7 @@
-import os
+import re
 from pydantic import BaseModel, Field
 from typing import Optional, List
-from langchain_google_genai import ChatGoogleGenerativeAI
-from dotenv import load_dotenv
 from loguru import logger
-from utils.api_rotator import rotator, with_retry
 
 class IntentResult(BaseModel):
     intent: str = Field(description="One of: factual_question, philosophical_discussion, mission_planning, research_mentoring, timeline_query, memory_recall")
@@ -15,60 +12,89 @@ class IntentResult(BaseModel):
     reasoning: str = Field(description="Brief explanation for this classification")
 
 class IntentClassifier:
-    INTENT_SYSTEM_PROMPT = """
-You are an intent classification engine for the Vikram Sarabhai Digital Twin.
-Classify the user's latest message into one of these exact categories:
+    """Fast keyword-based intent classifier — no LLM call needed."""
 
-1. factual_question: User wants factual information about space, science, India, or Sarabhai's actual historical work.
-2. philosophical_discussion: User wants to discuss ideas, values, vision, or have an open-ended intellectual conversation.
-3. mission_planning: User wants to build, plan, or create something and wants strategic guidance. (Keywords: help me build, plan, design, create, start a)
-4. research_mentoring: User wants feedback on a research idea, paper, or technical project. (Keywords: evaluate, review, critique, what do you think of my)
-5. timeline_query: User explicitly mentions a year, era, or asks what Sarabhai thought at a specific time period.
-6. memory_recall: User refers to a previous conversation or asks if the twin remembers something.
-
-Output strictly according to the required schema.
-"""
+    # Patterns ordered from most specific to least specific
+    PATTERNS = [
+        {
+            "intent": "memory_recall",
+            "keywords": [r"\bremember\b", r"\blast time\b", r"\bprevious\b", r"\bbefore\b", r"\byou said\b", r"\bwe discussed\b", r"\bwe talked\b"],
+            "mode_hint": None,
+        },
+        {
+            "intent": "timeline_query",
+            "keywords": [r"\b(19\d{2}|20[012]\d)\b", r"\bin the \d{4}s?\b", r"\bera\b", r"\bdecade\b", r"\bback then\b", r"\bat that time\b"],
+            "mode_hint": None,
+        },
+        {
+            "intent": "mission_planning",
+            "keywords": [r"\bhelp me (build|plan|design|create|start|launch)\b", r"\bhow (do|can|should) (i|we) (build|plan|design|create|start)\b", r"\bstrateg(y|ic)\b", r"\broadmap\b", r"\bblueprint\b", r"\bmission plan\b"],
+            "mode_hint": "mission_planning",
+        },
+        {
+            "intent": "research_mentoring",
+            "keywords": [r"\b(evaluate|review|critique|assess|feedback)\b", r"\bwhat do you think of\b", r"\bmy (research|paper|project|thesis|idea)\b", r"\bmentor\b"],
+            "mode_hint": "research_mentor",
+        },
+        {
+            "intent": "factual_question",
+            "keywords": [r"\b(what|when|where|who|how many|which)\b.*\?", r"\btell me about\b", r"\bexplain\b", r"\bwhat (is|was|are|were)\b", r"\bfact\b", r"\bhistory\b", r"\bbiograph\b", r"\beducat\b", r"\bfound(ed|ing)\b", r"\bISRO\b", r"\bPRL\b", r"\bIIM\b"],
+            "mode_hint": None,
+        },
+    ]
 
     def __init__(self):
-        load_dotenv()
-        self.model_name = os.getenv('GEMINI_MODEL', 'gemini-2.5-flash')
-        
-    def _get_structured_llm(self):
-        llm = ChatGoogleGenerativeAI(
-            model=self.model_name,
-            api_key=rotator.get_current_key() or "",
-            temperature=0.1
-        )
-        return llm.with_structured_output(IntentResult)
-        
+        pass  # No LLM needed
+
     def classify(self, message: str, conversation_history: list = None) -> IntentResult:
         logger.info(f"Classifying intent for message: '{message[:50]}...'")
-        
-        history_text = ""
-        if conversation_history:
-            # Take last 3 messages for context
-            recent = conversation_history[-3:]
-            formatted = []
-            for msg in recent:
-                role = msg.type if hasattr(msg, 'type') else msg.get('role', 'user') if isinstance(msg, dict) else 'user'
-                content = getattr(msg, 'content', msg.get('content', '')) if isinstance(msg, dict) else getattr(msg, 'content', '')
-                formatted.append(f"{role}: {content}")
-            history_text = "\nContext:\n" + "\n".join(formatted)
-            
-        prompt = f"{self.INTENT_SYSTEM_PROMPT}{history_text}\n\nLatest Message: {message}"
-        
-        try:
-            result = with_retry(
-                self._get_structured_llm,
-                lambda llm: llm.invoke(prompt)
-            )
-            logger.info(f"Classified as: {result.intent} (conf: {result.confidence})")
-            return result
-        except Exception as e:
-            logger.error(f"Intent classification failed: {e}")
-            # Fallback
-            return IntentResult(
-                intent="philosophical_discussion", 
-                confidence=0.0,
-                reasoning="Fallback due to error"
-            )
+        msg_lower = message.lower()
+
+        # Extract year hints
+        year_match = re.search(r"\b(19[2-9]\d|20[0-2]\d)\b", message)
+        timeline_hint = int(year_match.group(1)) if year_match else None
+
+        # Match patterns
+        for pattern in self.PATTERNS:
+            for kw in pattern["keywords"]:
+                if re.search(kw, msg_lower):
+                    result = IntentResult(
+                        intent=pattern["intent"],
+                        confidence=0.85,
+                        timeline_hint=timeline_hint,
+                        mode_hint=pattern["mode_hint"],
+                        topics=self._extract_topics(msg_lower),
+                        reasoning=f"Matched keyword pattern for {pattern['intent']}"
+                    )
+                    logger.info(f"Classified as: {result.intent} (conf: {result.confidence})")
+                    return result
+
+        # Default: philosophical discussion (Sarabhai's strength)
+        result = IntentResult(
+            intent="philosophical_discussion",
+            confidence=0.7,
+            timeline_hint=timeline_hint,
+            mode_hint=None,
+            topics=self._extract_topics(msg_lower),
+            reasoning="No specific pattern matched, defaulting to philosophical discussion"
+        )
+        logger.info(f"Classified as: {result.intent} (conf: {result.confidence})")
+        return result
+
+    def _extract_topics(self, msg: str) -> list[str]:
+        """Extract topic keywords from the message."""
+        topic_map = {
+            "space": ["space", "rocket", "satellite", "orbit", "launch", "isro", "nasa"],
+            "education": ["education", "university", "student", "learning", "iim", "school", "teach"],
+            "science": ["science", "research", "physics", "cosmic", "ray", "experiment"],
+            "technology": ["technology", "tech", "computer", "ai", "nuclear", "atomic"],
+            "leadership": ["leadership", "leader", "manage", "vision", "inspire"],
+            "india": ["india", "indian", "nation", "country", "development"],
+            "philosophy": ["philosophy", "think", "believe", "value", "meaning", "purpose"],
+            "institution": ["institution", "prl", "isro", "iim", "organization", "found"],
+        }
+        found = []
+        for topic, keywords in topic_map.items():
+            if any(kw in msg for kw in keywords):
+                found.append(topic)
+        return found or ["general"]

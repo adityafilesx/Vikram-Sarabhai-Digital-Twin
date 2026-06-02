@@ -5,7 +5,7 @@ from google import genai
 from google.genai import types
 from dotenv import load_dotenv
 from loguru import logger
-from utils.api_rotator import rotator, with_retry
+from utils.api_rotator import rotator, with_retry, with_model_fallback
 
 @dataclass
 class ExtractedFact:
@@ -55,19 +55,20 @@ If no new facts are found, return an empty list for "facts".
         """Call Gemini, parse JSON response, return facts with confidence >= 0.5"""
         prompt = f"{self.EXTRACTION_PROMPT}\n\nRecent History:\n{conversation_history}\n\nLatest User Message:\n{user_message}"
         
-        try:
-            # We enforce JSON output using response_mime_type
-            response = with_retry(
-                self._get_client,
-                lambda client: client.models.generate_content(
-                    model=self.model,
-                    contents=prompt,
-                    config=types.GenerateContentConfig(
-                        response_mime_type="application/json",
-                        temperature=0.1
-                    )
+        def _build_and_call(model_name: str):
+            client = genai.Client(api_key=rotator.get_current_key() or "")
+            return client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.1
                 )
             )
+            
+        try:
+            # We enforce JSON output using response_mime_type
+            response = with_model_fallback(self.model, _build_and_call)
             
             data = json.loads(response.text)
             
@@ -103,15 +104,16 @@ If no new facts are found, return an empty list for "facts".
         history_text = "\n".join(turns)
         prompt = f"{self.SUMMARY_PROMPT}\n\nConversation:\n{history_text}"
         
-        try:
-            response = with_retry(
-                self._get_client,
-                lambda client: client.models.generate_content(
-                    model=self.model,
-                    contents=prompt,
-                    config=types.GenerateContentConfig(temperature=0.3)
-                )
+        def _build_and_call(model_name: str):
+            client = genai.Client(api_key=rotator.get_current_key() or "")
+            return client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+                config=types.GenerateContentConfig(temperature=0.3)
             )
+            
+        try:
+            response = with_model_fallback(self.model, _build_and_call)
             return response.text.strip()
         except Exception as e:
             logger.error(f"Failed to summarize conversation: {e}")
