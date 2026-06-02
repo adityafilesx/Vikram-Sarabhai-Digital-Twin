@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vikram Sarabhai Digital Twin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            orange: '#FF6B00',
+                            blue: '#0B3D91',
+                            charcoal: '#111827',
+                            bg: '#F8F9FB',
+                            surface: '#FFFFFF',
+                            border: '#E5E7EB',
+                            textMuted: '#6B7280'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0px 4px 20px rgba(0, 0, 0, 0.04)',
+                        'modal': '0px 12px 32px rgba(0, 0, 0, 0.08)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #F8F9FB; color: #111827; }
+        .bento-card { background-color: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 16px; }
+        .bento-card:hover { box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.04); }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .btn-primary { background-color: #FF6B00; color: #FFFFFF; border-radius: 16px; transition: transform 0.15s ease-in-out; }
+        .btn-primary:active { transform: scale(0.98); }
+        .btn-secondary { background-color: #FFFFFF; color: #111827; border: 1px solid #E5E7EB; border-radius: 16px; transition: transform 0.15s ease-in-out; }
+        .btn-secondary:active { transform: scale(0.98); }
+        .input-field { background-color: #F8F9FB; border-radius: 16px; border: 1px solid transparent; outline: none; transition: all 0.2s; }
+        .input-field:focus { background-color: #FFFFFF; border: 1px solid #0B3D91; box-shadow: inset 0 0 0 1px #0B3D91; }
+        .nav-link.active { background-color: #0B3D91; color: white; }
+        .nav-link.active .material-symbols-outlined { color: white; }
+        
+        .loader {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #FF6B00;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+    <!-- Sidebar -->
+    <aside class="w-[280px] bg-white border-r border-brand-border flex flex-col h-full flex-shrink-0 z-10 hidden md:flex">
+        <div class="p-6 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-brand-blue flex items-center justify-center text-white font-bold text-xl shadow-soft">
+                VS
+            </div>
+            <div>
+                <h1 class="font-semibold text-lg leading-tight tracking-tight">Vikram Sarabhai</h1>
+                <p class="text-xs text-brand-textMuted font-medium tracking-wide uppercase">Digital Twin</p>
+            </div>
+        </div>
+        <nav class="flex-1 px-4 space-y-2 mt-4">
+            <button id="nav-chat" onclick="switchTab('chat')" class="nav-link active w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-sm font-medium transition-colors hover:bg-brand-bg text-brand-charcoal">
+                <span class="material-symbols-outlined text-[20px] text-brand-blue">forum</span>
+                Research Chat
+            </button>
+            <button id="nav-memory" onclick="switchTab('memory')" class="nav-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-sm font-medium transition-colors hover:bg-brand-bg text-brand-charcoal">
+                <span class="material-symbols-outlined text-[20px] text-brand-blue">psychology</span>
+                Memory & Insights
+            </button>
+        </nav>
+        <div class="p-6 border-t border-brand-border">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-brand-orange flex items-center justify-center text-white text-xs font-bold">TU</div>
+                <div class="text-sm font-medium" id="user-display-name">Test User</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-full relative">
+        <!-- Chat Tab -->
+        <div id="tab-chat" class="flex-1 flex flex-col h-full absolute inset-0">
+            <div class="bg-white border-b border-brand-border p-4 md:p-6 flex items-center justify-between shadow-sm z-10">
+                <div>
+                    <h2 class="text-xl font-semibold tracking-tight text-brand-charcoal">Conversation</h2>
+                    <p class="text-sm text-brand-textMuted">Engage with the Digital Twin</p>
+                </div>
+                <div class="flex gap-2">
+                    <select id="chat-mode" class="input-field px-4 py-2 text-sm border border-brand-border bg-white cursor-pointer font-medium text-brand-charcoal">
+                        <option value="conversational">Conversational Mode</option>
+                        <option value="research">Research Mode</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 scrollbar-hide bg-brand-bg">
+                <!-- Welcome Message -->
+                <div class="flex justify-start">
+                    <div class="max-w-[85%] md:max-w-[70%]">
+                        <div class="flex items-center gap-2 mb-1">
+                            <div class="w-6 h-6 rounded-md bg-brand-blue flex items-center justify-center text-white text-[10px] font-bold">VS</div>
+                            <span class="text-xs font-medium text-brand-textMuted">Dr. Sarabhai</span>
+                        </div>
+                        <div class="bento-card p-4 rounded-tl-sm text-brand-charcoal text-[16px] leading-[26px]">
+                            Hello. I am the digital twin of Vikram Sarabhai. How can I assist you with your research today?
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-4 md:p-6 bg-white border-t border-brand-border z-10">
+                <form id="chat-form" class="max-w-4xl mx-auto flex gap-3 relative">
+                    <input type="text" id="chat-input" placeholder="Ask a question about space, institutions, or science..." class="input-field flex-1 px-4 py-3 text-base" required autocomplete="off">
+                    <button type="submit" id="chat-submit" class="btn-primary px-6 py-3 font-medium flex items-center gap-2">
+                        <span id="btn-text">Send</span>
+                        <span id="btn-icon" class="material-symbols-outlined text-[18px]">send</span>
+                        <div id="btn-loader" class="loader hidden"></div>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Memory Tab -->
+        <div id="tab-memory" class="flex-1 flex flex-col h-full absolute inset-0 hidden overflow-y-auto scrollbar-hide bg-brand-bg p-4 md:p-8">
+            <div class="max-w-6xl mx-auto w-full space-y-8">
+                <div class="mb-8 border-b border-brand-border pb-6 flex justify-between items-end">
+                    <div>
+                        <h2 class="text-3xl font-semibold tracking-tight text-brand-charcoal">Insights Dashboard</h2>
+                        <p class="text-lg text-brand-textMuted mt-1">Real-time analysis of the agent's memory regarding your interactions.</p>
+                    </div>
+                    <button onclick="loadMemoryDashboard()" class="btn-secondary px-4 py-2 text-sm font-medium flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[18px]">refresh</span>
+                        Refresh
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Interests -->
+                    <div class="bento-card p-6 flex flex-col h-full">
+                        <div class="flex items-center gap-2 mb-4 pb-2 border-b border-brand-border">
+                            <span class="material-symbols-outlined text-brand-orange">lightbulb</span>
+                            <h3 class="font-semibold text-lg">Known Interests</h3>
+                        </div>
+                        <ul id="memory-interests" class="space-y-3 flex-1 text-brand-charcoal">
+                            <li class="text-sm text-brand-textMuted italic">Loading...</li>
+                        </ul>
+                    </div>
+
+                    <!-- Projects -->
+                    <div class="bento-card p-6 flex flex-col h-full">
+                        <div class="flex items-center gap-2 mb-4 pb-2 border-b border-brand-border">
+                            <span class="material-symbols-outlined text-brand-blue">rocket_launch</span>
+                            <h3 class="font-semibold text-lg">Active Projects</h3>
+                        </div>
+                        <ul id="memory-projects" class="space-y-3 flex-1 text-brand-charcoal">
+                            <li class="text-sm text-brand-textMuted italic">Loading...</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Background -->
+                    <div class="bento-card p-6 flex flex-col h-full md:col-span-2 lg:col-span-1">
+                        <div class="flex items-center gap-2 mb-4 pb-2 border-b border-brand-border">
+                            <span class="material-symbols-outlined text-brand-charcoal">history_edu</span>
+                            <h3 class="font-semibold text-lg">User Background</h3>
+                        </div>
+                        <div id="memory-background" class="text-[15px] text-brand-charcoal leading-relaxed">
+                            <span class="text-brand-textMuted italic">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

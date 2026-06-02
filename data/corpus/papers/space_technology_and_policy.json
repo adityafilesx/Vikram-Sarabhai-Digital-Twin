@@ -1,0 +1,52 @@
+[
+  {
+    "text": "The development of satellite technology for Indian conditions requires careful consideration of our unique requirements. Unlike the advanced nations, where satellite systems are designed primarily for military reconnaissance or commercial telecommunications, India's satellite programme must be oriented towards developmental applications. Remote sensing for agricultural planning, communication for rural connectivity, and meteorological observation for monsoon prediction — these are the applications that will justify our investment in space technology. The Indian National Satellite System that we are planning will be the first satellite system in the world designed specifically for developmental purposes.",
+    "source": "Vikram Sarabhai, Indian National Satellite System Concept Paper, 1970",
+    "date": "1970"
+  },
+  {
+    "text": "The development of an indigenous Satellite Launch Vehicle is essential for India's long-term self-reliance in space technology. While we currently depend on foreign launch services, this dependence is neither sustainable nor desirable. A nation that cannot place its own satellites in orbit will always be at the mercy of others — their schedules, their priorities, their political considerations. The SLV programme that we are initiating will give India the capability to launch small satellites into low Earth orbit. The technical challenges are formidable — rocket propulsion, guidance systems, staging mechanisms, and range safety all require mastery of complex technologies. But the team we have assembled is capable, and I am confident that we will succeed.",
+    "source": "Vikram Sarabhai, SLV Programme Initiation Document, 1970",
+    "date": "1970"
+  },
+  {
+    "text": "The application of remote sensing technology to India's resource management challenges is perhaps the most immediately practical outcome of our space programme. From orbit, a satellite equipped with multispectral sensors can survey crop conditions, map water resources, monitor forest cover, assess mineral deposits, and track urban growth across the entire country simultaneously. This information, which would take years to gather through conventional ground surveys, can be updated continuously from space. For a country as large and diverse as India, with limited surveying infrastructure, space-based remote sensing is not a luxury — it is the most efficient and cost-effective way to manage our natural resources.",
+    "source": "Vikram Sarabhai, Paper on Remote Sensing Applications, 1969",
+    "date": "1969"
+  },
+  {
+    "text": "The meteorological applications of satellite technology are of paramount importance to India. Our economy is critically dependent on the monsoon. A good monsoon means abundant harvests and economic growth; a poor monsoon means drought, famine, and suffering for hundreds of millions. Yet our ability to predict the monsoon remains limited, primarily because we lack observational data over the vast Indian Ocean, where the monsoon originates. Meteorological satellites can fill this gap by providing continuous observations of cloud patterns, sea surface temperatures, and atmospheric moisture over the ocean. With better data, our meteorologists can develop better models and make better predictions, ultimately protecting millions of lives and livelihoods.",
+    "source": "Vikram Sarabhai, Paper on Satellite Meteorology for India, 1968",
+    "date": "1968"
+  },
+  {
+    "text": "The concept of using television as a medium for mass education is not new, but the application of satellite technology to broadcast educational television directly to rural communities represents a quantum leap in capability. The SITE experiment will test this concept on a scale never before attempted. Using NASA's ATS-6 satellite, we will broadcast educational programmes to approximately 5,000 villages equipped with community television receivers. The content will cover agriculture, health, family planning, and national integration. The experiment will generate data on the effectiveness of satellite television as an educational medium, the technical requirements for community reception, and the social and cultural impacts of introducing television to rural communities.",
+    "source": "Vikram Sarabhai, SITE Technical Proposal, 1970",
+    "date": "1970"
+  },
+  {
+    "text": "The development of rocket propulsion technology in India began with the Nike-Apache sounding rockets imported from the United States. These rockets taught us the fundamentals of launch operations, telemetry, and range safety. We have since progressed to the French Centaure rockets and are now developing our own sounding rockets, starting with the Rohini series. The Rohini programme represents our first step towards indigenous rocket technology. Each Rohini variant — RH-75, RH-100, RH-125 — will push the envelope of our capabilities, building towards the eventual development of satellite launch vehicles. The progression is deliberate: we learn from each step before taking the next.",
+    "source": "Vikram Sarabhai, Report on Indian Rocket Development Programme, 1969",
+    "date": "1969"
+  },
+  {
+    "text": "The question of the appropriate technology model for India's industrialisation is one that we must approach with both scientific rigour and social sensitivity. The Gandhian model of village-level industry and the Nehruvian model of heavy industrialisation are not necessarily contradictory. Through appropriate technology — technology that is adapted to local conditions, sustainable, and accessible — we can achieve industrial progress without displacing workers or destroying communities. The work of ATIRA demonstrates this approach: we bring modern scientific methods to the textile industry, improving productivity and quality without making the human workforce redundant. Technology should empower people, not replace them.",
+    "source": "Vikram Sarabhai, Paper on Appropriate Technology for Indian Industry, 1965",
+    "date": "1965"
+  },
+  {
+    "text": "The interaction between science, technology, and society is not linear but deeply recursive. Scientific discoveries lead to new technologies, which transform society, which in turn creates new demands for scientific knowledge. Understanding this dynamic is essential for effective science policy. India's science policy must not simply fund research and hope for useful outcomes; it must actively identify the technological needs of society and direct scientific effort towards meeting those needs, while simultaneously maintaining a robust programme of fundamental research that generates the new knowledge from which future technologies will emerge.",
+    "source": "Vikram Sarabhai, Paper on Science Policy for Developing Nations, 1968",
+    "date": "1968"
+  },
+  {
+    "text": "The management of large-scale scientific and technological projects requires a distinctive set of skills. It combines the analytical rigour of science with the organisational complexity of managing hundreds or thousands of people across multiple disciplines and locations. At ISRO, we have developed a project management culture that emphasises clear objectives, rigorous scheduling, systematic risk assessment, and open communication. Every team member, from the newest recruit to the most senior scientist, must understand the overall mission and their role in achieving it. This culture of shared purpose and mutual accountability is, I believe, one of the most important factors in our success.",
+    "source": "Vikram Sarabhai, Paper on Managing Large Science Projects, 1970",
+    "date": "1970"
+  },
+  {
+    "text": "The relationship between basic research and applied technology is often misunderstood. Some argue that developing countries should focus exclusively on applied research with immediate practical benefits, leaving basic research to the wealthy nations. This view is dangerously short-sighted. Basic research is the source of all future technology. A nation that neglects basic research today will be dependent on others for its technology tomorrow. Moreover, basic research attracts the best minds, generates prestige for the national scientific enterprise, and creates the intellectual environment in which applied breakthroughs are most likely to occur. At PRL, we have always maintained a balance between basic and applied research, and this balance has been central to our success.",
+    "source": "Vikram Sarabhai, Paper on Basic Research in Developing Countries, 1964",
+    "date": "1964"
+  }
+]
