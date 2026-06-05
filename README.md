@@ -86,6 +86,36 @@ sarabhai-digital-twin/
 └── scripts/                # Utility scripts
 ```
 
+### Module Breakdown
+
+#### 🖥️ [backend/](file:///Users/aditya1981/Documents/Vikram%20Sarabhai%20Digital%20Twin/backend)
+Handles HTTP communication and API routing.
+- **[main.py](file:///Users/aditya1981/Documents/Vikram%20Sarabhai%20Digital%20Twin/backend/main.py)**: The FastAPI server that orchestrates request handling, serves the Static UI files, exposes memory dashboard endpoints, and invokes the LangGraph agent for generating streaming text responses.
+
+#### 🧠 [memory/](file:///Users/aditya1981/Documents/Vikram%20Sarabhai%20Digital%20Twin/memory)
+Manages persistent state and personalization profiles across sessions.
+- **[memory_db.py](file:///Users/aditya1981/Documents/Vikram%20Sarabhai%20Digital%20Twin/memory/memory_db.py)**: SQLite database schema and interactions for user profiles, session tracking, and chat histories.
+- **[memory_extractor.py](file:///Users/aditya1981/Documents/Vikram%20Sarabhai%20Digital%20Twin/memory/memory_extractor.py)**: Leverages Gemini to dynamically distill user interests, projects, and goals from conversation transcripts in the background.
+- **[memory_retriever.py](file:///Users/aditya1981/Documents/Vikram%20Sarabhai%20Digital%20Twin/memory/memory_retriever.py)**: Prepares profile structures and formatting logic for memory visualization nodes in the frontend graphs.
+
+#### 🔍 [rag/](file:///Users/aditya1981/Documents/Vikram%20Sarabhai%20Digital%20Twin/rag)
+Powering semantic grounding via Retrieval-Augmented Generation.
+- **[document_loader.py](file:///Users/aditya1981/Documents/Vikram%20Sarabhai%20Digital%20Twin/rag/document_loader.py)** & **[chunker.py](file:///Users/aditya1981/Documents/Vikram%20Sarabhai%20Digital%20Twin/rag/chunker.py)**: Read, clean, and chunk multi-format historical texts.
+- **[embedder.py](file:///Users/aditya1981/Documents/Vikram%20Sarabhai%20Digital%20Twin/rag/embedder.py)**: Interfaces with Gemini's text-embeddings models.
+- **[vector_store.py](file:///Users/aditya1981/Documents/Vikram%20Sarabhai%20Digital%20Twin/rag/vector_store.py)**: Manages vector indexing and similarity searches using local ChromaDB storage.
+- **[pipeline_runner.py](file:///Users/aditya1981/Documents/Vikram%20Sarabhai%20Digital%20Twin/rag/pipeline_runner.py)**: Orchestrates the ingestion of source texts into vector databases.
+
+#### 🤖 [agent/](file:///Users/aditya1981/Documents/Vikram%20Sarabhai%20Digital%20Twin/agent)
+Core execution graph and decision-making mechanisms.
+- **[agent_graph.py](file:///Users/aditya1981/Documents/Vikram%20Sarabhai%20Digital%20Twin/agent/agent_graph.py)**: Defines the LangGraph StateGraph, managing routing logic, memory integration, persona prompts, and RAG injection nodes.
+- **[intent_classifier.py](file:///Users/aditya1981/Documents/Vikram%20Sarabhai%20Digital%20Twin/agent/intent_classifier.py)**: Dynamically routes requests to conversational, planning, or mentoring states.
+- **[tools.py](file:///Users/aditya1981/Documents/Vikram%20Sarabhai%20Digital%20Twin/agent/tools.py)**: Exposes workspace utility commands, retrieval actions, and metadata bindings.
+
+#### 🛠️ [scripts/](file:///Users/aditya1981/Documents/Vikram%20Sarabhai%20Digital%20Twin/scripts)
+Administration and diagnostics.
+- **[run_system.py](file:///Users/aditya1981/Documents/Vikram%20Sarabhai%20Digital%20Twin/scripts/run_system.py)**: Wrapper script to configure environment variables and concurrently kick off backend servers.
+- **[validate_system.py](file:///Users/aditya1981/Documents/Vikram%20Sarabhai%20Digital%20Twin/scripts/validate_system.py)**: Validates connectivity, tests endpoints, and checks file requirements.
+
 ## Corpus Collection
 
 The quality of the Digital Twin is bounded by the quality of its knowledge base. Priority sources:
