@@ -167,8 +167,12 @@ async def chat(req: ChatRequest, background_tasks: BackgroundTasks):
                 role="assistant",
                 content=response_text
             )
+            
+            # Run memory extraction in the background
+            if agent:
+                agent.memory_update_node(final_state)
         except Exception as e:
-            logger.error(f"Failed to save turns: {e}")
+            logger.error(f"Failed to save turns or update memory: {e}")
         
     background_tasks.add_task(save_turns)
     
